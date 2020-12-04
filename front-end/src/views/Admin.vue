@@ -17,8 +17,26 @@
         <img :src="addItem.path" />
       </div>
     </div>
+
+    <div class="circle">2</div>
+    <h2>Add a User</h2>
+    <div class="user">
+      <div class="form">
+        <input v-model="name" placeholder="User's Name">
+        <p></p>
+        <input v-model="age" placeholder="How old are you?">
+        <p></p>
+        <input v-model="favColor" placeholder="What is your faveColor?:)">
+        <button @click="insert">Insert</button>
+      </div>
+      <div class="insert" v-if="addUser">
+        <h2>{{addUser.name}}</h2>
+      </div>
+    </div>
+
+
     <div class="heading">
-      <div class="circle">2</div>
+      <div class="circle">3</div>
       <h2>Edit/Delete an Item</h2>
     </div>
     <div class="edit">
@@ -39,6 +57,34 @@
 	<button @click="editItem(findItem)">Edit</button>
       </div>
     </div>
+
+
+
+
+    <div class="circle">4</div>
+    <h2>Edit/Delete an User</h2>
+    <div class="edit">
+      <div class="form">
+        <input v-model="findPerson" placeholder="Name?">
+        <div class="suggestions2" v-if="suggestions2.length > 0">
+          <div class="suggestion" v-for="s in suggestions2" :key="s.id" @click="selectUser(s)">{{s.name}}
+          </div>
+        </div>
+      </div>
+      <div class="insert" v-if="findUser">
+        <input v-model="findUser.name">
+        <p></p>
+        <img :src="findUser.path" />
+      </div>
+      <div class="actions" v-if="findUser">
+        <button @click="deleteUser(findUser)">Delete</button>
+        <button @click="editUser(findUser)">Edit</button>
+      </div>
+    </div>
+
+
+
+
     <div id="footer">
       <p>Page Author: James Peterson</p>
       <p><a href="https://github.com/BYU-CS-260-Winter-2020/lab-4-museum-of-ordinary-objects-james-peterson11.git">GitHub Repository</a></p>
@@ -56,19 +102,34 @@ export default {
       title: "",
       file: null,
       addItem: null,
+
+      name: "",
+      age: "",
+      favColor: "",
+      addUser: null,
+
       items: [],
       findTitle: "",
       findItem: null,
+
+      users: [],
+      findPerson: "",
+      findUser: null,
     }
   },
   computed: {
     suggestions() {
       let items = this.items.filter(item => item.title.toLowerCase().startsWith(this.findTitle.toLowerCase()));
       return items.sort((a, b) => a.title > b.title);
+    },
+    suggestions2() {
+      let items = this.users.filter(item => item.name.toLowerCase().startsWith(this.findPerson.toLowerCase()));
+      return items.sort((a, b) => a.name > b.name);
     }
   },
   created() {
     this.getItems();
+    this.getUsers();
   },
   methods: {
     fileChanged(event) {
@@ -85,22 +146,75 @@ export default {
         });
         this.addItem = r2.data;
       } catch (error) {
-        console.log(error);
+       // console.log(error);
       }
     },
+
+
+    async insert() {
+      try {
+        let r1 = await axios.post('/api/users/', {
+          name: this.name,
+          age: this.age,
+          favColor: this.favColor
+        });
+        this.addUser = r1.data;
+      } catch (error) {
+        // console.log(error);
+      }
+    },
+    async getUsers() {
+      try {
+        let response = await axios.get("/api/users/");
+        this.users = response.data;
+        return true;
+      } catch (error) {
+       // console.log(error);
+      }
+    },
+
     async getItems() {
       try {
         let response = await axios.get("/api/items");
         this.items = response.data;
         return true;
       } catch (error) {
-        console.log(error);
+       // console.log(error);
       }
     },
-   selectItem(item) {
-      this.findTitle = "";
-      this.findItem = item;
+    selectUser(item) {
+      this.findPerson = "";
+      this.findUser = item;
     },
+    async deleteUser(item) {
+       try {
+         await axios.delete("/api/users/" + item._id);
+         this.findUser = null;
+         this.getUsers();
+         return true;
+       } catch (error) {
+        // console.log(error);
+       }
+     },
+     async editUser(item) {
+        try {
+          await axios.put("/api/users/" + item._id, {
+            name: this.findUser.name,
+          });
+          this.findUser = null;
+          this.getUsers();
+          return true;
+        } catch (error) {
+         // console.log(error);
+        }
+      },
+
+
+
+    selectItem(item) {
+        this.findTitle = "";
+        this.findItem = item;
+      },
    async deleteItem(item) {
       try {
         await axios.delete("/api/items/" + item._id);
@@ -108,7 +222,7 @@ export default {
         this.getItems();
         return true;
       } catch (error) {
-        console.log(error);
+       // console.log(error);
       }
     },
    async editItem(item) {
@@ -120,7 +234,7 @@ export default {
         this.getItems();
         return true;
       } catch (error) {
-        console.log(error);
+       // console.log(error);
       }
     },
   }

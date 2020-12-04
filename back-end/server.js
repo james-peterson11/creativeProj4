@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({
 const mongoose = require('mongoose');
 
 // connect to the database
-mongoose.connect('mongodb://localhost:27017/museum', {
+mongoose.connect('mongodb://localhost:27017/creativeP3', {
   useNewUrlParser: true
 });
 
@@ -18,7 +18,7 @@ mongoose.connect('mongodb://localhost:27017/museum', {
 // Configure multer so that it will upload to '../front-end/public/images'
 const multer = require('multer')
 const upload = multer({
-	  dest: '../front-end/public/images/',
+	  dest: '/var/www/lab4.j-peterson.com/images/',
 	  limits: {
 		      fileSize: 10000000
 		    }
@@ -30,9 +30,74 @@ const itemSchema = new mongoose.Schema({
 	  title: String,
 	  path: String,
 });
+//create another schema
+const userSchema = new mongoose.Schema({
+    name: String,
+    age: String,
+    favColor: String,
+});
 
 // Create a model for items in the museum.
 const Item = mongoose.model('Item', itemSchema);
+//make another schema as a model. const User mongoose.model("newmname", seche)
+const User = mongoose.model('User', userSchema);
+
+app.post('/api/users/', async (req, res) => {
+	  const item = new User({
+		      name: req.body.name,
+          age: req.body.age,
+		      favColor: req.body.favColor,
+		    });
+	  try {
+		      await item.save();
+		      res.send(item);
+		    } catch (error) {
+			        console.log(error);
+			        res.sendStatus(500);
+			      }
+});
+
+// Get a list of all of the items in the museum.
+app.get('/api/users/', async (req, res) => {
+	  try {
+		      let items = await User.find();
+		      res.send(items);
+		    } catch (error) {
+			        console.log(error);
+			        res.sendStatus(500);
+			      }
+});
+app.delete('/api/users/:id', async (req, res) => {
+	try {
+		await User.deleteOne({
+			_id: req.params.id
+		});
+		res.sendStatus(200);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+});
+
+app.put('/api/users/:id', async (req, res) => {
+	try {
+		let item = await User.findOne({
+			_id: req.params.id
+		});
+		item.name = req.body.name;
+		await item.save();
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+});
+
+
+
+
+
+
+
 
 
 // Upload a photo. Uses the multer middleware for the upload and then returns
@@ -101,4 +166,4 @@ app.put('/api/items/:id', async (req, res) => {
 	}
 });
 
-app.listen(3000, () => console.log('Server listening on port 3000!'));
+app.listen(3001, () => console.log('Server listening on port 3001!'));
